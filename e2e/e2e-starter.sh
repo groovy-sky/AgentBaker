@@ -33,6 +33,17 @@ if [ -n "$out" ]; then
         clusterDeleteEndTime=$(date +%s)
         log "Deleted cluster $CLUSTER_NAME in $((clusterDeleteEndTime-clusterDeleteStartTime)) seconds"
         create_cluster="true"
+    elif [ "$provisioning_state" == "Creating" ]; then
+        # Other pipeline is creating this cluster
+        log "Cluster $CLUSTER_NAME is being created, waiting for ready"
+        az aks wait --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP_NAME --created --interval 60 --timeout 1800
+        provisioning_state=$(az aks show -n $CLUSTER_NAME -g $RESOURCE_GROUP_NAME -ojson | jq '.provisioningState' | tr -d "\"")
+        if [ "$provisioning_state" == "Succeeded" ]; then
+            log "Cluster created by other pipeline successfully"
+        else
+            err "Other pipeline failed to create the cluster"
+            exit 1
+        fi
     fi
 else
     create_cluster="true"
@@ -42,10 +53,23 @@ fi
 if [ "$create_cluster" == "true" ]; then
     log "Creating cluster $CLUSTER_NAME"
     clusterCreateStartTime=$(date +%s)
+    retval=0
     if [[ "$RESOURCE_GROUP_NAME" == *"windows"* ]]; then
-        az aks create -g $RESOURCE_GROUP_NAME -n $CLUSTER_NAME --node-count 1 --generate-ssh-keys --network-plugin azure -ojson
+        az aks create -g $RESOURCE_GROUP_NAME -n $CLUSTER_NAME --node-count 1 --generate-ssh-keys --network-plugin azure -ojson || retval=$?
     else
-        az aks create -g $RESOURCE_GROUP_NAME -n $CLUSTER_NAME --node-count 1 --generate-ssh-keys --network-plugin kubenet -ojson
+        az aks create -g $RESOURCE_GROUP_NAME -n $CLUSTER_NAME --node-count 1 --generate-ssh-keys --network-plugin kubenet -ojson || retval=$?
+    fi
+
+    if [ "$retval" -ne 0  ]; then
+        log "Other pipelines may be creating cluster $CLUSTER_NAME, waiting for ready"
+        az aks wait --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP_NAME --created --interval 60 --timeout 1800
+    fi
+    provisioning_state=$(az aks show -n $CLUSTER_NAME -g $RESOURCE_GROUP_NAME -ojson | jq '.provisioningState' | tr -d "\"")
+    if [ "$provisioning_state" == "Succeeded" ]; then
+        log "Created cluster successfully"
+    else
+        err "Failed to create cluster"
+        exit 1
     fi
     clusterCreateEndTime=$(date +%s)
     log "Created cluster $CLUSTER_NAME in $((clusterCreateEndTime-clusterCreateStartTime)) seconds"
