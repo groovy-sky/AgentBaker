@@ -91,6 +91,25 @@ CLUSTER_ID=$(echo $MC_VMSS_NAME | cut -d '-' -f3)
 kubectl apply -f deploy.yaml
 kubectl rollout status deploy/debug
 
+# Sleep to let Pod Status=Running
+podName=$(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}")
+waitForPodStartTime=$(date +%s)
+for i in $(seq 1 10); do
+    set +e
+    kubectl get pods -o wide | grep $podName
+    kubectl get pods -o wide | grep $podName | grep 'Running'
+    retval=$?
+    set -e
+    if [ "$retval" -ne 0 ]; then
+        log "retrying attempt $i"
+        sleep 10
+        continue
+    fi
+    break;
+done
+waitForPodEndTime=$(date +%s)
+log "Waited $((waitForPodEndTime-waitForPodStartTime)) seconds for pod to come up"
+
 # Retrieve the etc/kubernetes/azure.json file for cluster related info
 log "Retrieving cluster info"
 clusterInfoStartTime=$(date +%s)
