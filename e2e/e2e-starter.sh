@@ -94,17 +94,8 @@ kubectl rollout status deploy/debug
 # Retrieve the etc/kubernetes/azure.json file for cluster related info
 log "Retrieving cluster info"
 clusterInfoStartTime=$(date +%s)
-retval=0
 
-exec_on_host "cat /etc/kubernetes/azure.json" fields.json || retval=$?
-for i in $(seq 1 10); do
-    if [ "$retval" -ne 0 ]; then
-        exec_on_host "cat /etc/kubernetes/azure.json" fields.json || retval=$?
-        sleep 5
-        continue
-    fi
-    break;
-done
+exec_on_host "cat /etc/kubernetes/azure.json" fields.json
 exec_on_host "cat /etc/kubernetes/certs/apiserver.crt | base64 -w 0" apiserver.crt
 exec_on_host "cat /etc/kubernetes/certs/ca.crt | base64 -w 0" ca.crt
 exec_on_host "cat /etc/kubernetes/certs/client.key | base64 -w 0" client.key
