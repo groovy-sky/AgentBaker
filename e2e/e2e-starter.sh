@@ -49,11 +49,11 @@ else
     create_cluster="true"
 fi
 
+retval=0
 # Create the AKS cluster and get the kubeconfig
 if [ "$create_cluster" == "true" ]; then
     log "Creating cluster $CLUSTER_NAME"
     clusterCreateStartTime=$(date +%s)
-    retval=0
     if [[ "$RESOURCE_GROUP_NAME" == *"windows"* ]]; then
         az aks create -g $RESOURCE_GROUP_NAME -n $CLUSTER_NAME --node-count 1 --generate-ssh-keys --network-plugin azure -ojson || retval=$?
     else
@@ -91,30 +91,19 @@ CLUSTER_ID=$(echo $MC_VMSS_NAME | cut -d '-' -f3)
 kubectl apply -f deploy.yaml
 kubectl rollout status deploy/debug
 
-# Sleep to let Pod Status=Running
-podName=$(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}")
-waitForPodStartTime=$(date +%s)
-for i in $(seq 1 10); do
-    set +e
-    kubectl get pods -o wide | grep $podName
-    kubectl get pods -o wide | grep $podName | grep 'Running'
-    retval=$?
-    set -e
-    if [ "$retval" -ne 0 ]; then
-        log "retrying attempt $i"
-        sleep 10
-        continue
-    fi
-    break;
-done
-waitForPodEndTime=$(date +%s)
-log "Waited $((waitForPodEndTime-waitForPodStartTime)) seconds for pod to come up"
-
 # Retrieve the etc/kubernetes/azure.json file for cluster related info
 log "Retrieving cluster info"
 clusterInfoStartTime=$(date +%s)
 
-exec_on_host "cat /etc/kubernetes/azure.json" fields.json
+exec_on_host "cat /etc/kubernetes/azure.json" fields.json || retval=$?
+for for i in $(seq 1 10); do
+    if [ "$retval" -ne 0 ]; then
+        exec_on_host "cat /etc/kubernetes/azure.json" fields.json || retval=$?
+        sleep 5
+        continue
+    fi
+    break;
+done
 exec_on_host "cat /etc/kubernetes/certs/apiserver.crt | base64 -w 0" apiserver.crt
 exec_on_host "cat /etc/kubernetes/certs/ca.crt | base64 -w 0" ca.crt
 exec_on_host "cat /etc/kubernetes/certs/client.key | base64 -w 0" client.key
