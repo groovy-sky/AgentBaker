@@ -49,11 +49,11 @@ else
     create_cluster="true"
 fi
 
-retval=0
 # Create the AKS cluster and get the kubeconfig
 if [ "$create_cluster" == "true" ]; then
     log "Creating cluster $CLUSTER_NAME"
     clusterCreateStartTime=$(date +%s)
+    retval=0
     if [[ "$RESOURCE_GROUP_NAME" == *"windows"* ]]; then
         az aks create -g $RESOURCE_GROUP_NAME -n $CLUSTER_NAME --node-count 1 --generate-ssh-keys --network-plugin azure -ojson || retval=$?
     else
@@ -94,9 +94,10 @@ kubectl rollout status deploy/debug
 # Retrieve the etc/kubernetes/azure.json file for cluster related info
 log "Retrieving cluster info"
 clusterInfoStartTime=$(date +%s)
+retval=0
 
 exec_on_host "cat /etc/kubernetes/azure.json" fields.json || retval=$?
-for for i in $(seq 1 10); do
+for i in $(seq 1 10); do
     if [ "$retval" -ne 0 ]; then
         exec_on_host "cat /etc/kubernetes/azure.json" fields.json || retval=$?
         sleep 5
