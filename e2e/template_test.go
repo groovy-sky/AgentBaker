@@ -1,4 +1,4 @@
-package e2e_test
+package e2e
 
 import "github.com/Azure/agentbaker/pkg/agent/datamodel"
 
