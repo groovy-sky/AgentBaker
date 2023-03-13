@@ -79,6 +79,7 @@ func createVMSSWithPayload(ctx context.Context, r *mrand.Rand, cloud *azureClien
 							SSH: &armcompute.SSHConfiguration{
 								PublicKeys: []*armcompute.SSHPublicKey{
 									{
+										// TODO(ace): FIX ME
 										KeyData: to.Ptr("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1EETTQ47Q9VhAAtjCb7fjciPU1+JehogdXCr6HhMWHLWGciiCgiSz5CmGBBcVSHJXKBaPdq1CcGF8qTiP7C7wMyo+WweeDVrmSzvpQK/RBNr7JO9UuA4oguxCGMtRoc9Ak4ME8h80+oSkHdsgixbcyeXUpzdhO1cfidtWWzezWIKIQzIw5wgShnFw4jq1RnANH0Cz8aaDdG5SZOi5/OCobmUdLuQMivqs6+PA13+i6AZtcNTz79pLkJZvoU/UZDU1jpmLzqNj1LX3Rl7TeXIJAj5RzbdagAGPZkOQNAyipxeyu2oisGXe2oU1IZJbyzf6VQGLfc7Q+Is+aK3c7id04bA+OXznW1zYC5S5AFdyy1sBNMgyC7IX+oko7eczWdTVH3jFrcQaMH/FfxMoTPOXBm8wv6xUVpsKKJ3aZlzsGsL4uURF/B2owydp7qx7vnmqim2I8WZoLdMavcL0t1lgR8qe3U9cH4qnar8/cW6fQdvuBazB3//3Rtfzx6rJoW0= root@Ubuntu-2004-focal-64-minimal"),
 										Path:    to.Ptr("/home/azureuser/.ssh/authorized_keys"),
 									},
