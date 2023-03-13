@@ -33,7 +33,7 @@ func nsenterCommandArray() []string {
 	}
 }
 
-const sshCommandTemplate = `echo %s | base64 -d > sshkey && chmod 0600 sshkey && ssh -i sshkey -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=5 azureuser@%s sudo`
+const sshCommandTemplate = `echo '%s' > sshkey && chmod 0600 sshkey && ssh -i sshkey -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=5 azureuser@%s sudo`
 
 func extractLogsFromFailedVM(ctx context.Context, t *testing.T, cloud *azureClient, kube *kubeclient, subscription, resourceGroupName, clusterName, vmssName, sshPrivateKey string) (map[string]string, error) {
 	pl := cloud.coreClient.Pipeline()
