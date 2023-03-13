@@ -13,16 +13,7 @@ err() {
 }
 
 exec_on_host() {
-    # Add retry to mitigate the error message "Error from server: error dialing backend: write unix @->/tunnel-uds/proxysocket: write: broken pipe"
-    local retval=0
-    for i in $(seq 1 10); do
-        kubectl exec $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}") -- bash -c "nsenter -t 1 -m bash -c \"$1\"" > $2 || retval=$?
-        if [ "$retval" -ne 0 ]; then
-            sleep 5
-            continue
-        fi
-        break;
-    done
+    kubectl exec $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}") -- bash -c "nsenter -t 1 -m bash -c \"$1\"" > $2
 }
 
 addJsonToFile() {
