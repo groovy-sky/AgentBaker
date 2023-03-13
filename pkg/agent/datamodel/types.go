@@ -543,6 +543,7 @@ type KubernetesConfig struct {
 	KubernetesImageBase               string            `json:"kubernetesImageBase,omitempty"`
 	MCRKubernetesImageBase            string            `json:"mcrKubernetesImageBase,omitempty"`
 	ClusterSubnet                     string            `json:"clusterSubnet,omitempty"`
+	ClusterSubnets                    []string          `json:"clusterSubnets,omitempty"`
 	NetworkPolicy                     string            `json:"networkPolicy,omitempty"`
 	NetworkPlugin                     string            `json:"networkPlugin,omitempty"`
 	NetworkMode                       string            `json:"networkMode,omitempty"`
@@ -551,6 +552,7 @@ type KubernetesConfig struct {
 	DockerBridgeSubnet                string            `json:"dockerBridgeSubnet,omitempty"`
 	DNSServiceIP                      string            `json:"dnsServiceIP,omitempty"`
 	ServiceCIDR                       string            `json:"serviceCidr,omitempty"`
+	ServiceCIDRs                      []string          `json:"serviceCidrs,omitempty"`
 	UseManagedIdentity                bool              `json:"useManagedIdentity,omitempty"`
 	UserAssignedID                    string            `json:"userAssignedID,omitempty"`
 	UserAssignedClientID              string            `json:"userAssignedClientID,omitempty"` // Note: cannot be provided in config. Used *only* for transferring this to azure.json.
@@ -1272,6 +1274,31 @@ func (k *KubernetesConfig) GetAddonByName(addonName string) KubernetesAddon {
 		}
 	}
 	return kubeAddon
+}
+
+func (k *KubernetesConfig) GetAllClusterSubnets() []string {
+	return getUniqueElements(k.ClusterSubnet, k.ClusterSubnets...)
+}
+
+func (k *KubernetesConfig) GetAllServiceCIDRs() []string {
+	return getUniqueElements(k.ServiceCIDR, k.ServiceCIDRs...)
+}
+
+func getUniqueElements(input string, additional ...string) []string {
+	unique := map[string]struct{}{}
+	unique[input] = struct{}{}
+
+	for _, s := range additional {
+		unique[s] = struct{}{}
+	}
+
+	result := make([]string, 0)
+	for k := range unique {
+		if k != "" {
+			result = append(result, k)
+		}
+	}
+	return result
 }
 
 // IsAddonDisabled checks whether a k8s addon with name "addonName" is explicitly disabled based on the Enabled field of KubernetesAddon.
