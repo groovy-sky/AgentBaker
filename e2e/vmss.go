@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	mrand "math/rand"
 
@@ -12,7 +14,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func createVMSSWithPayload(ctx context.Context, r *mrand.Rand, cloud *azureClient, location, resourceGroupName, name string, customData, cseCmd string) error {
+func createVMSSWithPayload(ctx context.Context, r *mrand.Rand, cloud *azureClient, location, resourceGroupName, name string, customData, cseCmd string) (sshPrivateKey []byte, e error) {
 	// TODO(ace): FIX ME
 	// will break when cluster recreates because vnet/subnet will change
 	// also won't work for multiple clusters
@@ -21,22 +23,34 @@ func createVMSSWithPayload(ctx context.Context, r *mrand.Rand, cloud *azureClien
 	// Private Key generation
 	privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
-		return fmt.Errorf("failed to create rsa private key: %q", err)
+		return nil, fmt.Errorf("failed to create rsa private key: %q", err)
 	}
 
 	// Validate Private Key
 	err = privateKey.Validate()
 	if err != nil {
-		return fmt.Errorf("failed to validate private key: %q", err)
+		return nil, fmt.Errorf("failed to validate private key: %q", err)
 	}
 
 	publicRsaKey, err := ssh.NewPublicKey(&privateKey.PublicKey)
 	if err != nil {
-		return fmt.Errorf("failed to convert private to public key: %q", err)
+		return nil, fmt.Errorf("failed to convert private to public key: %q", err)
 	}
 
 	pubKeyBytes := ssh.MarshalAuthorizedKey(publicRsaKey)
-	_ = pubKeyBytes
+
+	// Get ASN.1 DER format
+	privDER := x509.MarshalPKCS1PrivateKey(privateKey)
+
+	// pem.Block
+	privBlock := pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   privDER,
+	}
+
+	// Private key in PEM format
+	privatePEM := pem.EncodeToMemory(&privBlock)
 
 	pollerResp, err := cloud.vmssClient.BeginCreateOrUpdate(
 		ctx,
@@ -79,8 +93,7 @@ func createVMSSWithPayload(ctx context.Context, r *mrand.Rand, cloud *azureClien
 							SSH: &armcompute.SSHConfiguration{
 								PublicKeys: []*armcompute.SSHPublicKey{
 									{
-										// TODO(ace): FIX ME
-										KeyData: to.Ptr("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC1EETTQ47Q9VhAAtjCb7fjciPU1+JehogdXCr6HhMWHLWGciiCgiSz5CmGBBcVSHJXKBaPdq1CcGF8qTiP7C7wMyo+WweeDVrmSzvpQK/RBNr7JO9UuA4oguxCGMtRoc9Ak4ME8h80+oSkHdsgixbcyeXUpzdhO1cfidtWWzezWIKIQzIw5wgShnFw4jq1RnANH0Cz8aaDdG5SZOi5/OCobmUdLuQMivqs6+PA13+i6AZtcNTz79pLkJZvoU/UZDU1jpmLzqNj1LX3Rl7TeXIJAj5RzbdagAGPZkOQNAyipxeyu2oisGXe2oU1IZJbyzf6VQGLfc7Q+Is+aK3c7id04bA+OXznW1zYC5S5AFdyy1sBNMgyC7IX+oko7eczWdTVH3jFrcQaMH/FfxMoTPOXBm8wv6xUVpsKKJ3aZlzsGsL4uURF/B2owydp7qx7vnmqim2I8WZoLdMavcL0t1lgR8qe3U9cH4qnar8/cW6fQdvuBazB3//3Rtfzx6rJoW0= root@Ubuntu-2004-focal-64-minimal"),
+										KeyData: to.Ptr(string(pubKeyBytes)),
 										Path:    to.Ptr("/home/azureuser/.ssh/authorized_keys"),
 									},
 								},
@@ -133,15 +146,15 @@ func createVMSSWithPayload(ctx context.Context, r *mrand.Rand, cloud *azureClien
 		nil,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	res, err := pollerResp.PollUntilDone(ctx, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_ = res
 
-	return nil
+	return privatePEM, nil
 }

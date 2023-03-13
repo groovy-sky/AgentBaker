@@ -33,10 +33,9 @@ func nsenterCommandArray() []string {
 	}
 }
 
-// const notAnSshKey = “
 const sshCommandTemplate = `echo %s | base64 -d > sshkey && chmod 0600 sshkey && ssh -i sshkey -o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=5 azureuser@%s sudo`
 
-func extractLogsFromFailedVM(ctx context.Context, t *testing.T, cloud *azureClient, kube *kubeclient, subscription, resourceGroupName, clusterName, vmssName string) (map[string]string, error) {
+func extractLogsFromFailedVM(ctx context.Context, t *testing.T, cloud *azureClient, kube *kubeclient, subscription, resourceGroupName, clusterName, vmssName, sshPrivateKey string) (map[string]string, error) {
 	pl := cloud.coreClient.Pipeline()
 	url := fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/virtualMachineScaleSets/%s/virtualMachines/%d/networkInterfaces?api-version=2018-10-01",
 		subscription,
@@ -71,8 +70,7 @@ func extractLogsFromFailedVM(ctx context.Context, t *testing.T, cloud *azureClie
 
 	privateIP := instanceNICResult.Value[0].Properties.IPConfigurations[0].Properties.PrivateIPAddress
 
-	// TODO(ace): FIX ME -- key should be from the one generated in vmss.go
-	sshCommand := fmt.Sprintf(sshCommandTemplate, "", privateIP)
+	sshCommand := fmt.Sprintf(sshCommandTemplate, sshPrivateKey, privateIP)
 
 	commandList := map[string]string{
 		"/var/log/azure/cluster-provision/log": "cat /var/log/azure/cluster-provision.log",

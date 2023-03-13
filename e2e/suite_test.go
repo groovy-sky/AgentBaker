@@ -1,4 +1,4 @@
-package e2e
+package e2e_test
 
 import (
 	"context"
@@ -85,12 +85,12 @@ func Test_All(t *testing.T) {
 
 			t.Logf("vmss name: %q", vmssName)
 
-			err = createVMSSWithPayload(ctx, r, cloud, suiteConfig.location, suiteConfig.resourceGroupName, vmssName, base64EncodedCustomData, cseCmd)
+			sshPrivateKeyBytes, err := createVMSSWithPayload(ctx, r, cloud, suiteConfig.location, suiteConfig.resourceGroupName, vmssName, base64EncodedCustomData, cseCmd)
 			if err != nil {
 				t.Error(err)
 			}
 
-			_, err = extractLogsFromFailedVM(ctx, t, cloud, kube, suiteConfig.subscription, suiteConfig.resourceGroupName, suiteConfig.clusterName, vmssName)
+			_, err = extractLogsFromFailedVM(ctx, t, cloud, kube, suiteConfig.subscription, suiteConfig.resourceGroupName, suiteConfig.clusterName, vmssName, string(sshPrivateKeyBytes))
 			if err != nil {
 				t.Error(err)
 			}
