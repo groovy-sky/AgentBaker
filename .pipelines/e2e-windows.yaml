@@ -38,7 +38,7 @@ stages:
   jobs:
   - template: ./templates/e2e-windows-template.yaml
     parameters:
-      windowsImage: 2019-containerd
+      windowsImage: t1
       windowsOSSKU: Windows2019
       windowsVMSize: Standard_D2s_v3
 
@@ -48,7 +48,7 @@ stages:
   jobs:
   - template: ./templates/e2e-windows-template.yaml
     parameters:
-      windowsImage: 2022-containerd
+      windowsImage: t2
       windowsOSSKU: Windows2022
       windowsVMSize: Standard_D2_v2
 
@@ -58,6 +58,6 @@ stages:
   jobs:
   - template: ./templates/e2e-windows-template.yaml
     parameters:
-      windowsImage: 2022-containerd-gen2
+      windowsImage: t3
       windowsOSSKU: Windows2022
       windowsVMSize: Standard_DS2_v2
