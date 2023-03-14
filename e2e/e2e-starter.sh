@@ -40,9 +40,6 @@ if [ -n "$out" ]; then
         provisioning_state=$(az aks show -n $CLUSTER_NAME -g $RESOURCE_GROUP_NAME -ojson | jq '.provisioningState' | tr -d "\"")
         if [ "$provisioning_state" == "Succeeded" ]; then
             log "Cluster created by other pipeline successfully"
-            if [[ "$RESOURCE_GROUP_NAME" == *"windows"*  ]]; then
-                sleep 10
-            fi
         else
             err "Other pipeline failed to create the cluster"
             exit 1
@@ -70,9 +67,6 @@ if [ "$create_cluster" == "true" ]; then
     provisioning_state=$(az aks show -n $CLUSTER_NAME -g $RESOURCE_GROUP_NAME -ojson | jq '.provisioningState' | tr -d "\"")
     if [ "$provisioning_state" == "Succeeded" ]; then
         log "Created cluster successfully"
-        if [[ "$RESOURCE_GROUP_NAME" == *"windows"*  ]]; then
-            sleep 10
-        fi
     else
         err "Failed to create cluster"
         exit 1
