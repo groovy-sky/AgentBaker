@@ -14,16 +14,19 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/go-armbalancer"
 )
 
 type azureClient struct {
-	coreClient     *azcore.Client
-	vmssClient     *armcompute.VirtualMachineScaleSetsClient
-	vmssVMClient   *armcompute.VirtualMachineScaleSetVMsClient
-	resourceClient *armresources.Client
-	aksClient      *armcontainerservice.ManagedClustersClient
+	coreClient          *azcore.Client
+	vmssClient          *armcompute.VirtualMachineScaleSetsClient
+	vmssVMClient        *armcompute.VirtualMachineScaleSetVMsClient
+	vnetClient          *armnetwork.VirtualNetworksClient
+	resourceClient      *armresources.Client
+	resourceGroupClient *armresources.ResourceGroupsClient
+	aksClient           *armcontainerservice.ManagedClustersClient
 }
 
 func newAzureClient(subscription string) (*azureClient, error) {
@@ -101,12 +104,24 @@ func newAzureClient(subscription string) (*azureClient, error) {
 		return nil, fmt.Errorf("failed to create resource client: %q", err)
 	}
 
+	resourceGroupClient, err := armresources.NewResourceGroupsClient(subscription, credential, opts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create resource client: %q", err)
+	}
+
+	vnetClient, err := armnetwork.NewVirtualNetworksClient(subscription, credential, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create vnet client: %q", err)
+	}
+
 	var cloud = &azureClient{
-		coreClient:     coreClient,
-		aksClient:      aksClient,
-		resourceClient: resourceClient,
-		vmssClient:     vmssClient,
-		vmssVMClient:   vmssVMClient,
+		coreClient:          coreClient,
+		aksClient:           aksClient,
+		resourceClient:      resourceClient,
+		resourceGroupClient: resourceGroupClient,
+		vmssClient:          vmssClient,
+		vmssVMClient:        vmssVMClient,
+		vnetClient:          vnetClient,
 	}
 
 	return cloud, nil

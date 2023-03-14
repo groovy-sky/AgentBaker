@@ -39,7 +39,7 @@ func extractLogsFromFailedVM(ctx context.Context, t *testing.T, cloud *azureClie
 	pl := cloud.coreClient.Pipeline()
 	url := fmt.Sprintf("https://management.azure.com/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/virtualMachineScaleSets/%s/virtualMachines/%d/networkInterfaces?api-version=2018-10-01",
 		subscription,
-		"MC_agentbaker-e2e-tests_agentbaker-e2e-test-cluster_eastus",
+		agentbakerTestResourceGroupName,
 		vmssName,
 		0,
 	)
