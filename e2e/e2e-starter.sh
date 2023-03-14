@@ -95,27 +95,11 @@ kubectl rollout status deploy/debug
 log "Retrieving cluster info"
 clusterInfoStartTime=$(date +%s)
 
-retval=0
-exec_on_host "cat /etc/kubernetes/azure.json" fields.json || retval=$?
-if [ "$retval" -ne 0  ]; then
-    kubectl exec $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}") -- bash -c "nsenter -t 1 -m bash -c \"ls /etc/kubernetes/\""
-fi
-exec_on_host "cat /etc/kubernetes/certs/apiserver.crt | base64 -w 0" apiserver.crt || retval=$?
-if [ "$retval" -ne 0  ]; then
-    kubectl exec $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}") -- bash -c "nsenter -t 1 -m bash -c \"ls /etc/kubernetes/certs/\""
-fi
-exec_on_host "cat /etc/kubernetes/certs/ca.crt | base64 -w 0" ca.crt || retval=$?
-if [ "$retval" -ne 0  ]; then
-    kubectl exec $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}") -- bash -c "nsenter -t 1 -m bash -c \"ls /etc/kubernetes/certs/\""
-fi
-exec_on_host "cat /etc/kubernetes/certs/client.key | base64 -w 0" client.key || retval=$?
-if [ "$retval" -ne 0  ]; then
-    kubectl exec $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}") -- bash -c "nsenter -t 1 -m bash -c \"ls /etc/kubernetes/certs/\""
-fi
-exec_on_host "cat /var/lib/kubelet/bootstrap-kubeconfig" bootstrap-kubeconfig || retval=$?
-if [ "$retval" -ne 0  ]; then
-    kubectl exec $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}") -- bash -c "nsenter -t 1 -m bash -c \"ls /var/lib/kubelet/\""
-fi
+exec_on_host "cat /etc/kubernetes/azure.json" fields.json
+exec_on_host "cat /etc/kubernetes/certs/apiserver.crt | base64 -w 0" apiserver.crt
+exec_on_host "cat /etc/kubernetes/certs/ca.crt | base64 -w 0" ca.crt
+exec_on_host "cat /etc/kubernetes/certs/client.key | base64 -w 0" client.key
+exec_on_host "cat /var/lib/kubelet/bootstrap-kubeconfig" bootstrap-kubeconfig
 
 clusterInfoEndTime=$(date +%s)
 log "Retrieved cluster info in $((clusterInfoEndTime-clusterInfoStartTime)) seconds"

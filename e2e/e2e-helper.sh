@@ -13,7 +13,11 @@ err() {
 }
 
 exec_on_host() {
-    kubectl exec $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}") -- bash -c "nsenter -t 1 -m bash -c \"$1\"" > $2
+    local retval=0
+    kubectl exec $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}") -- bash -c "nsenter -t 1 -m bash -c \"$1\"" > $2 || retval=$?
+    if [ "$retval" -ne 0  ]; then
+        err "Failed to execute \"$1\""
+    fi
 }
 
 addJsonToFile() {
