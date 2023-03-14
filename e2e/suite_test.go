@@ -24,17 +24,20 @@ const agentbakerTestResourceGroupName = "MC_agentbaker-e2e-tests_agentbaker-e2e-
 
 var cases = map[string]scenarioConfig{
 	"base": {},
-	// "gpu": {
-	// 	bootstrapConfigMutator: func(t *testing.T, nbc *datamodel.NodeBootstrappingConfiguration) {
-	// 		nbc.ContainerService.Properties.AgentPoolProfiles[0].VMSize = "Standard_NC6"
-	// 		nbc.ContainerService.Properties.AgentPoolProfiles[0].Distro = "aks-ubuntu-containerd-18.04-gen2"
-	// 		nbc.AgentPoolProfile.VMSize = "Standard_NC6"
-	// 		nbc.AgentPoolProfile.Distro = "aks-ubuntu-containerd-18.04-gen2"
-	// 		nbc.ConfigGPUDriverIfNeeded = true
-	// 		nbc.EnableGPUDevicePluginIfNeeded = false
-	// 		nbc.EnableNvidia = true
-	// 	},
-	// },
+	"gpu": {
+		bootstrapConfigMutator: func(t *testing.T, nbc *datamodel.NodeBootstrappingConfiguration) {
+			nbc.ContainerService.Properties.AgentPoolProfiles[0].VMSize = "Standard_NC6"
+			nbc.ContainerService.Properties.AgentPoolProfiles[0].Distro = "aks-ubuntu-containerd-18.04-gen2"
+			nbc.AgentPoolProfile.VMSize = "Standard_NC6"
+			nbc.AgentPoolProfile.Distro = "aks-ubuntu-containerd-18.04-gen2"
+			nbc.ConfigGPUDriverIfNeeded = true
+			nbc.EnableGPUDevicePluginIfNeeded = false
+			nbc.EnableNvidia = true
+		},
+		vmConfigMutator: func(vmss *armcompute.VirtualMachineScaleSet) {
+			vmss.SKU.Name = to.Ptr("Standard_NC6s_v3")
+		},
+	},
 }
 
 func Test_All(t *testing.T) {
