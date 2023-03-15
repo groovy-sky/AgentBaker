@@ -91,17 +91,16 @@ CLUSTER_ID=$(echo $MC_VMSS_NAME | cut -d '-' -f3)
 kubectl apply -f deploy.yaml
 kubectl rollout status deploy/debug
 
-sleep 10
-
 # Retrieve the etc/kubernetes/azure.json file for cluster related info
 log "Retrieving cluster info"
 clusterInfoStartTime=$(date +%s)
 
-exec_on_host "cat /etc/kubernetes/azure.json" fields.json
-exec_on_host "cat /etc/kubernetes/certs/apiserver.crt | base64 -w 0" apiserver.crt
-exec_on_host "cat /etc/kubernetes/certs/ca.crt | base64 -w 0" ca.crt
-exec_on_host "cat /etc/kubernetes/certs/client.key | base64 -w 0" client.key
-exec_on_host "cat /var/lib/kubelet/bootstrap-kubeconfig" bootstrap-kubeconfig
+ecec_on_host_for_windows
+# exec_on_host "cat /etc/kubernetes/azure.json" fields.json
+# exec_on_host "cat /etc/kubernetes/certs/apiserver.crt | base64 -w 0" apiserver.crt
+# exec_on_host "cat /etc/kubernetes/certs/ca.crt | base64 -w 0" ca.crt
+# exec_on_host "cat /etc/kubernetes/certs/client.key | base64 -w 0" client.key
+# exec_on_host "cat /var/lib/kubelet/bootstrap-kubeconfig" bootstrap-kubeconfig
 
 clusterInfoEndTime=$(date +%s)
 log "Retrieved cluster info in $((clusterInfoEndTime-clusterInfoStartTime)) seconds"
