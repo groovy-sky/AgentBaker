@@ -109,7 +109,7 @@ if [[ "$RESOURCE_GROUP_NAME" == *"windows"*  ]]; then
         copy_file_to_pod client.key client.key
         copy_file_to_pod bootstrap-kubeconfig bootstrap-kubeconfig
     else
-        copy_file_from_pod fields.json azure.json
+        copy_file_from_pod azure.json azure.json
         copy_file_from_pod apiserver.crt apiserver.crt
         copy_file_from_pod ca.crt ca.crt
         copy_file_from_pod client.key client.key

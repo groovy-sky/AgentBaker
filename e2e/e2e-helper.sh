@@ -21,10 +21,10 @@ copy_file_to_pod() {
 }
 
 copy_file_from_pod() {
-    local retval=0
+    local result=""
     for i in $(seq 1 10); do
-        kubectl cp $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}"):$1 $2 || retval=$?
-        if [ "$retval" -ne 0 ]; then
+        result=$(kubectl cp $(kubectl get pod -l app=debug -o jsonpath="{.items[0].metadata.name}"):$1 $2)
+        if [ "$result" != "" ]; then
             sleep 5
             continue
         fi
