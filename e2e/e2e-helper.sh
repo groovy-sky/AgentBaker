@@ -17,8 +17,8 @@ exec_on_host() {
 }
 
 ecec_on_host_for_windows() {
-    INSTANCE_ID="$(az vmss list-instances --name $VMSS_NAME -g $MC_RESOURCE_GROUP_NAME | jq -r '.[0].instanceId')"
-    PRIVATE_IP="$(az vmss nic list-vm-nics --vmss-name $VMSS_NAME -g $MC_RESOURCE_GROUP_NAME --instance-id $INSTANCE_ID | jq -r .[0].ipConfigurations[0].privateIPAddress)"
+    INSTANCE_ID="$(az vmss list-instances --name $MC_VMSS_NAME -g $MC_RESOURCE_GROUP_NAME | jq -r '.[0].instanceId')"
+    PRIVATE_IP="$(az vmss nic list-vm-nics --vmss-name $MC_VMSS_NAME -g $MC_RESOURCE_GROUP_NAME --instance-id $INSTANCE_ID | jq -r .[0].ipConfigurations[0].privateIPAddress)"
     set +x
     SSH_KEY=$(cat ~/.ssh/id_rsa)
     SSH_OPTS="-o PasswordAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=5"
