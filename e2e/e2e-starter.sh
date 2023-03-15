@@ -91,15 +91,7 @@ CLUSTER_ID=$(echo $MC_VMSS_NAME | cut -d '-' -f3)
 kubectl apply -f deploy.yaml
 kubectl rollout status deploy/debug
 
-containerStatus=$(kubectl get pods -o=jsonpath='{range .items[*]}{"\n"}{.metadata.name}{":\t"}{range .status.containerStatuses[*]}{.ready}{", "}{end}{end}')
-for i in $(seq 1 30); do
-    if [[ "$containerStatus" != *"true"* ]]; then
-        sleep 10
-        containerStatus=$(kubectl get pods -o=jsonpath='{range .items[*]}{"\n"}{.metadata.name}{":\t"}{range .status.containerStatuses[*]}{.ready}{", "}{end}{end}')
-        continue
-    fi
-    break;
-done
+sleep 10
 
 # Retrieve the etc/kubernetes/azure.json file for cluster related info
 log "Retrieving cluster info"
