@@ -117,7 +117,7 @@ KUBECONFIG=$(pwd)/kubeconfig
 export KUBECONFIG
 
 clientCertificate=$(grep "client-certificate-data" $KUBECONFIG | awk '{print $2}')
-kubectl rollout status deploy/debug
+# kubectl rollout status deploy/debug
 
 tee $SCENARIO_NAME-vmss.json > /dev/null <<EOF
 {
