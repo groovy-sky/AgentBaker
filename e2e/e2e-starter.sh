@@ -62,6 +62,7 @@ if [ "$create_cluster" == "true" ]; then
 
     if [ "$retval" -ne 0  ]; then
         log "Other pipelines may be creating cluster $CLUSTER_NAME, waiting for ready"
+        create_cluster="false"
         az aks wait --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP_NAME --created --interval 60 --timeout 1800
     fi
     provisioning_state=$(az aks show -n $CLUSTER_NAME -g $RESOURCE_GROUP_NAME -ojson | jq '.provisioningState' | tr -d "\"")
@@ -95,12 +96,32 @@ kubectl rollout status deploy/debug
 log "Retrieving cluster info"
 clusterInfoStartTime=$(date +%s)
 
-ecec_on_host_for_windows
-# exec_on_host "cat /etc/kubernetes/azure.json" fields.json
-# exec_on_host "cat /etc/kubernetes/certs/apiserver.crt | base64 -w 0" apiserver.crt
-# exec_on_host "cat /etc/kubernetes/certs/ca.crt | base64 -w 0" ca.crt
-# exec_on_host "cat /etc/kubernetes/certs/client.key | base64 -w 0" client.key
-# exec_on_host "cat /var/lib/kubelet/bootstrap-kubeconfig" bootstrap-kubeconfig
+if [[ "$RESOURCE_GROUP_NAME" == *"windows"*  ]]; then
+    if [ "$create_cluster" == "true" ]; then
+        exec_on_host "cat /etc/kubernetes/azure.json" fields.json
+        exec_on_host "cat /etc/kubernetes/certs/apiserver.crt | base64 -w 0" apiserver.crt
+        exec_on_host "cat /etc/kubernetes/certs/ca.crt | base64 -w 0" ca.crt
+        exec_on_host "cat /etc/kubernetes/certs/client.key | base64 -w 0" client.key
+        exec_on_host "cat /var/lib/kubelet/bootstrap-kubeconfig" bootstrap-kubeconfig
+        copy_file_to_pod fields.json azure.json
+        copy_file_to_pod apiserver.crt apiserver.crt
+        copy_file_to_pod ca.crt ca.crt
+        copy_file_to_pod client.key client.key
+        copy_file_to_pod bootstrap-kubeconfig bootstrap-kubeconfig
+    else
+        copy_file_from_pod fields.json azure.json
+        copy_file_from_pod apiserver.crt apiserver.crt
+        copy_file_from_pod ca.crt ca.crt
+        copy_file_from_pod client.key client.key
+        copy_file_from_pod bootstrap-kubeconfig bootstrap-kubeconfig
+    fi
+else
+    exec_on_host "cat /etc/kubernetes/azure.json" fields.json
+    exec_on_host "cat /etc/kubernetes/certs/apiserver.crt | base64 -w 0" apiserver.crt
+    exec_on_host "cat /etc/kubernetes/certs/ca.crt | base64 -w 0" ca.crt
+    exec_on_host "cat /etc/kubernetes/certs/client.key | base64 -w 0" client.key
+    exec_on_host "cat /var/lib/kubelet/bootstrap-kubeconfig" bootstrap-kubeconfig
+fi
 
 clusterInfoEndTime=$(date +%s)
 log "Retrieved cluster info in $((clusterInfoEndTime-clusterInfoStartTime)) seconds"
